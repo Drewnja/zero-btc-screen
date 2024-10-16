@@ -1,5 +1,6 @@
 from .base_page import Page
 from data.plot import Plot
+import logging
 
 class PricePage(Page):
     def __init__(self, mode, fonts):
@@ -26,6 +27,8 @@ class PricePage(Page):
             y_position = 5
             Plot.percentage(self.prices, x_middle, y_position, self.fonts['medium'], draw, fill=0)
 
-    def update_data(self, data):
-        self.prices = data['prices']
-
+    def update_data(self, data, latest_price):
+        self.prices = data.get('prices', [])
+        self.latest_price = latest_price
+        logging.info(f"Updated PricePage data. Number of price entries: {len(self.prices)}")
+        logging.info(f"Latest price: {self.latest_price}")

@@ -81,10 +81,8 @@ class MempoolPage(Page):
                 draw.text((graph_start_x, height - 15), start_date.strftime("%d/%m"), font=self.fonts['small'], fill=0)
                 draw.text((width - 40, height - 15), end_date.strftime("%d/%m"), font=self.fonts['small'], fill=0)
 
-    def update_data(self, data):
-        logging.info(f"Received data for MempoolPage: {data.keys()}")
+    def update_data(self, data, latest_price):
         self.mempool_data = data.get('hashrate_data', {})
-        if not self.mempool_data:
-            logging.warning("No hashrate_data found in the provided data")
-        else:
-            logging.info(f"Hashrate data keys: {self.mempool_data.keys()}")
+        self.latest_price = latest_price
+        logging.info(f"Updated MempoolPage data: {self.mempool_data}")
+        logging.info(f"Latest price: {self.latest_price}")

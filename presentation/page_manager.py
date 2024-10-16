@@ -1,4 +1,5 @@
 import time
+import logging
 from logs import logger
 from config.config import config
 from presentation.pages.price_page import PricePage
@@ -28,5 +29,8 @@ class PageManager:
 
     def update_data(self, data):
         all_data = MempoolAPI.get_all_data()
+        logging.info(f"All data keys: {all_data.keys()}")
+        latest_price = all_data['latest_price']
+        logging.info(f"Latest price from API: {latest_price}")
         for page in self.pages:
-            page.update_data(all_data)
+            page.update_data(all_data, latest_price)

@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 class MempoolAPI:
     BASE_URL = "https://mempool.space/api"
     COINDESK_URL = "https://production.api.coindesk.com/v2/price/values"
+    COINDESK_CURRENT_PRICE_URL = "https://api.coindesk.com/v1/bpi/currentprice.json"
     DATA_SLICE_DAYS = 1
     DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 
@@ -79,9 +80,24 @@ class MempoolAPI:
             return {}
 
     @staticmethod
+    def get_latest_price():
+        logger.info('Fetching latest price')
+        try:
+            response = requests.get(MempoolAPI.COINDESK_CURRENT_PRICE_URL)
+            response.raise_for_status()
+            data = response.json()
+            latest_price = data['bpi']['USD']['rate_float']
+            logger.info(f"Latest price: {latest_price}")
+            return float(latest_price)
+        except requests.RequestException as e:
+            logger.error(f"Error fetching latest price: {str(e)}")
+            return 0.0
+
+    @staticmethod
     def get_all_data():
         return {
             'hashrate_data': MempoolAPI.get_hashrate_data(),
             'prices': MempoolAPI.get_prices(),
             'braiins_data': MempoolAPI.get_braiins_data(),
+            'latest_price': MempoolAPI.get_latest_price(),
         }
