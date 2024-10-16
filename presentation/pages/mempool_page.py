@@ -2,19 +2,25 @@ from .base_page import Page
 from utils.format_utils import format_hash_rate, format_difficulty
 from data.plot import Plot
 from datetime import datetime
+import logging
 
 class MempoolPage(Page):
     def __init__(self, fonts):
         self.mempool_data = {}
         self.fonts = fonts
+        logging.info("MempoolPage initialized")
 
     def render(self, draw, width, height):
-        hashrate_data = self.mempool_data.get('hashrate_data', {})
+        logging.info("MempoolPage render method called")
+        logging.info(f"Mempool data keys: {self.mempool_data.keys()}")
+        
+        hashrate_data = self.mempool_data
         
         # Top part: Current Difficulty and Hashrate
         if 'currentDifficulty' in hashrate_data:
             diff = hashrate_data['currentDifficulty']
             formatted_diff = format_difficulty(diff)
+            logging.info(f"Drawing difficulty: {formatted_diff}")
             draw.text((10, 5), "DIFF", font=self.fonts['small'], fill=0)
             draw.text((10, 20), formatted_diff, font=self.fonts['large'], fill=0)
             draw.text((10, 50), "T", font=self.fonts['medium'], fill=0)
@@ -22,6 +28,7 @@ class MempoolPage(Page):
         if 'currentHashrate' in hashrate_data:
             hashrate = hashrate_data['currentHashrate']
             formatted_hashrate = format_hash_rate(hashrate)
+            logging.info(f"Drawing hashrate: {formatted_hashrate}")
             draw.text((width // 2, 5), "HASHRATE", font=self.fonts['small'], fill=0)
             draw.text((width // 2, 20), formatted_hashrate, font=self.fonts['large'], fill=0)
             draw.text((width // 2, 50), "EH/S", font=self.fonts['medium'], fill=0)
@@ -75,4 +82,9 @@ class MempoolPage(Page):
                 draw.text((width - 40, height - 15), end_date.strftime("%d/%m"), font=self.fonts['small'], fill=0)
 
     def update_data(self, data):
-        self.mempool_data = data.get('mempool', {})
+        logging.info(f"Received data for MempoolPage: {data.keys()}")
+        self.mempool_data = data.get('hashrate_data', {})
+        if not self.mempool_data:
+            logging.warning("No hashrate_data found in the provided data")
+        else:
+            logging.info(f"Hashrate data keys: {self.mempool_data.keys()}")

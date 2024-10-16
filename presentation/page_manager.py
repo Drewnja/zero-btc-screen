@@ -11,7 +11,7 @@ class PageManager:
         self.pages = [
             PricePage(mode, fonts),
             MempoolPage(fonts),
-            BraiinsPage(fonts)
+            BraiinsPage(fonts),
         ]
         self.current_page_index = 0
         self.page_change_count = 0

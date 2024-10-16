@@ -2,9 +2,13 @@ import requests
 from logs import logger
 import json
 from config.config import config
+from datetime import datetime, timezone, timedelta
 
 class MempoolAPI:
     BASE_URL = "https://mempool.space/api"
+    COINDESK_URL = "https://production.api.coindesk.com/v2/price/values"
+    DATA_SLICE_DAYS = 1
+    DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 
     @staticmethod
     def get_fees():
@@ -40,10 +44,30 @@ class MempoolAPI:
         }
 
     @staticmethod
-    def get_braiins_data():
+    def get_prices():
+        logger.info('Fetching prices')
+        timeslot_end = datetime.now(timezone.utc)
+        end_date = timeslot_end.strftime(MempoolAPI.DATETIME_FORMAT)
+        start_date = (timeslot_end - timedelta(days=MempoolAPI.DATA_SLICE_DAYS)).strftime(MempoolAPI.DATETIME_FORMAT)
+        url = f'{MempoolAPI.COINDESK_URL}/{config.currency}?ohlc=true&start_date={start_date}&end_date={end_date}'
+        
         try:
-            url = "https://pool.braiins.com/accounts/profile/json/btc/"
-            headers = {"SlushPool-Auth-Token": "mXtd4vht9DurQlT2"}
+            response = requests.get(url)
+            response.raise_for_status()
+            external_data = response.json()
+            prices = [entry[1:] for entry in external_data['data']['entries']]
+            return prices
+        except requests.RequestException as e:
+            logger.error(f"Error fetching prices: {str(e)}")
+            return []
+
+    @staticmethod
+    def get_braiins_data():
+        logger.info('Fetching Braiins data')
+        url = 'https://pool.braiins.com/accounts/profile/json/btc/'
+        headers = {"SlushPool-Auth-Token": "mXtd4vht9DurQlT2"}  # Consider moving this to a config file
+        
+        try:
             response = requests.get(url, headers=headers)
             response.raise_for_status()
             data = response.json()
@@ -53,13 +77,11 @@ class MempoolAPI:
         except requests.RequestException as e:
             logger.error(f"Error fetching Braiins data: {str(e)}")
             return {}
-        except Exception as e:
-            logger.error(f"Unexpected error fetching Braiins data: {str(e)}")
-            return {}
 
     @staticmethod
     def get_all_data():
         return {
             'hashrate_data': MempoolAPI.get_hashrate_data(),
-            'braiins_data': MempoolAPI.get_braiins_data()
+            'prices': MempoolAPI.get_prices(),
+            'braiins_data': MempoolAPI.get_braiins_data(),
         }
