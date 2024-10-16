@@ -1,9 +1,10 @@
 import logging
 import sys
+from pprint import pformat
 
 from config.config import config
 
-__all__ = ('logger', )
+__all__ = ('logger',)
 
 
 def get_logger():
@@ -21,6 +22,14 @@ def get_logger():
         handler.setFormatter(formatter)
         _logger.addHandler(handler)
         _logger.setLevel(logging.NOTSET)
+    
+    # Add custom method to log prices
+    def log_prices(prices, level=logging.INFO):
+        formatted_prices = pformat(prices, width=120, compact=True)
+        _logger.log(level, f"Prices:\n{formatted_prices}")
+    
+    _logger.log_prices = log_prices
+    
     return _logger
 
 

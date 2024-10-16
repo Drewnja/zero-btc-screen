@@ -20,6 +20,10 @@ class Builder:
                     screen_config_value = parameters.get(argument)
                     if screen_config_value is not None:
                         kwargs[argument] = screen_config_value
+                
+                # # Add rotation parameter
+                # kwargs['rotation'] = int(parameters.get('rotation', 0))  # Get rotation from config, default to 0
+
                 screen_class(observable=observable, **kwargs)
                 logger.info(f'{screen} initialized')
             except AttributeError as e:

@@ -4,11 +4,13 @@ import time
 from datetime import datetime, timezone, timedelta
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+import utils.format_utils as format_utils
 
 from config.builder import Builder
 from config.config import config
 from logs import logger
 from presentation.observer import Observable
+from api_client import MempoolAPI
 
 DATA_SLICE_DAYS = 1
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
@@ -39,15 +41,36 @@ def main():
     builder = Builder(config)
     builder.bind(data_sink)
 
+    last_update_time = 0
+    last_cycle_time = 0
+
     try:
         while True:
-            try:
-                prices = [entry[1:] for entry in get_dummy_data()] if config.dummy_data else fetch_prices()
-                data_sink.update_observers(prices)
-                time.sleep(config.refresh_interval)
-            except (HTTPError, URLError) as e:
-                logger.error(str(e))
-                time.sleep(5)
+            current_time = time.time()
+
+            # Check if it's time to update data
+            if current_time - last_update_time >= config.refresh_interval:
+                try:
+                    prices = fetch_prices()
+                    mempool_data = MempoolAPI.get_mempool_data()
+                    logger.info("Mempool data:")
+                    logger.info(json.dumps(mempool_data, indent=2))
+                    
+                    data = {
+                        'prices': prices,
+                        'mempool': mempool_data
+                    }
+                    data_sink.update_observers(data)
+                    last_update_time = current_time
+                except (HTTPError, URLError) as e:
+                    logger.error(str(e))
+
+            # Check if it's time to cycle pages
+            if current_time - last_cycle_time >= config.page_cycle_interval:
+                data_sink.cycle_pages()
+                last_cycle_time = current_time
+
+            time.sleep(0.1)  # Short sleep to prevent CPU overuse
     except IOError as e:
         logger.error(str(e))
     except KeyboardInterrupt:

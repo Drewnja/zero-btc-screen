@@ -3,17 +3,20 @@ from config.config import config
 
 class Plot:
     @staticmethod
-    def line(prices, size=(100, 100), position=(0, 0), draw=None, fill=None):
+    def line(data, size=(100, 100), position=(0, 0), draw=None):
         assert draw
-        max_price = max(prices)
-        min_price = min(prices)
-        normalised_prices = [(price - min_price) / (max_price - min_price) for price in prices]
         plot_data = []
-        for i, element in enumerate(normalised_prices):
-            x = i * (size[0] / len(normalised_prices)) + position[0]
-            y = size[1] - (element * size[1]) + position[1]
+        for i, value in enumerate(data):
+            x = i * (size[0] / (len(data) - 1)) + position[0]
+            y = size[1] - (value * size[1]) + position[1]
             plot_data.append((x, y))
-        draw.line(plot_data, fill=fill)
+        
+        # Draw axes
+        draw.line([(position[0], position[1]), (position[0], position[1] + size[1])], fill=0, width=1)  # Y-axis
+        draw.line([(position[0], position[1] + size[1]), (position[0] + size[0], position[1] + size[1])], fill=0, width=1)  # X-axis
+        
+        # Draw the line graph
+        draw.line(plot_data, fill=0, width=2)
 
     @staticmethod
     def y_axis_labels(prices, font, position_first=(0, 0), position_last=(0, 0), draw=None, fill=None, labels_number=3):
@@ -127,3 +130,17 @@ class Plot:
             fractional_length = length - magnitude - 2
             format_string = f'%.{fractional_length}f'
         return format_string % number
+
+    @staticmethod
+    def dual_line(data1, data2, size=(100, 100), position=(0, 0), draw=None):
+        assert draw
+        plot_data1 = []
+        plot_data2 = []
+        for i, (d1, d2) in enumerate(zip(data1, data2)):
+            x = i * (size[0] / (len(data1) - 1)) + position[0]
+            y1 = size[1] - (d1 * size[1]) + position[1]
+            y2 = size[1] - (d2 * size[1]) + position[1]
+            plot_data1.append((x, y1))
+            plot_data2.append((x, y2))
+        draw.line(plot_data1, fill=0, width=2)  # Difficulty line (bold)
+        draw.line(plot_data2, fill=0, width=1)  # Hashrate line (lighter)
